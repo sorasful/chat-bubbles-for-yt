@@ -1,3 +1,5 @@
+import { AudioSettings, defaultAudioSettings } from './audio'
+
 export interface SettingsType {
   bubbleColor: string
   backgroundColor: string
@@ -9,6 +11,7 @@ export interface SettingsType {
   chatGap: number
   timerShort: number
   timerLong: number
+  audio: AudioSettings
 }
 
 export const defaultSettings: SettingsType = {
@@ -21,5 +24,6 @@ export const defaultSettings: SettingsType = {
   maxBubbleWidth: 384,
   chatGap: 8,
   timerShort: 500,
-  timerLong: 3000
+  timerLong: 3000,
+  audio: defaultAudioSettings
 }

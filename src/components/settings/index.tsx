@@ -1,13 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, RotateCcw } from 'lucide-react'
+import { X, RotateCcw, Volume2 } from 'lucide-react'
 
+import { useAudioStore } from '../../store/use-audio-store'
 import { useSettingsStore } from '../../store/use-settings-store'
 import { ColorPicker } from './components/color-picker'
 import { NumberInput } from './components/number-input'
 import { SettingGroup } from './components/setting-group'
+import { SoundPackUpload } from './components/sound-pack-upload'
+import { ToggleSwitch } from './components/toggle-switch'
+import { FileUpload } from './components/file-upload'
 
 const Settings = () => {
   const { settings, isSettingsOpen, updateSetting, resetSettings, toggleSettings } = useSettingsStore()
+  const { audioSettings, updateAudioSetting, loadMessageSound, messageSoundBuffer } = useAudioStore()
+
+  const handleMessageSoundUpload = async (file: File) => {
+    await loadMessageSound(file)
+  }
 
   return (
     <AnimatePresence>
@@ -120,6 +129,60 @@ const Settings = () => {
                       step={0.1}
                       unit="s"
                     />
+                  </SettingGroup>
+
+                  {/* Audio */}
+                  <SettingGroup title="Audio">
+                    <ToggleSwitch
+                      label="Sons de clavier"
+                      checked={audioSettings.keyboardSoundEnabled}
+                      onChange={(checked) => updateAudioSetting('keyboardSoundEnabled', checked)}
+                      description="Jouer un son à chaque frappe"
+                    />
+                    
+                    {audioSettings.keyboardSoundEnabled && (
+                      <NumberInput
+                        label="Volume clavier"
+                        value={audioSettings.keyboardVolume}
+                        onChange={(value) => updateAudioSetting('keyboardVolume', value)}
+                        min={0}
+                        max={1}
+                        step={0.1}
+                      />
+                    )}
+
+                    <ToggleSwitch
+                      label="Son d'envoi de message"
+                      checked={audioSettings.messageSoundEnabled}
+                      onChange={(checked) => updateAudioSetting('messageSoundEnabled', checked)}
+                      description="Jouer un son lors de l'envoi d'un message"
+                    />
+                    
+                    {audioSettings.messageSoundEnabled && (
+                      <>
+                        <NumberInput
+                          label="Volume message"
+                          value={audioSettings.messageVolume}
+                          onChange={(value) => updateAudioSetting('messageVolume', value)}
+                          min={0}
+                          max={1}
+                          step={0.1}
+                        />
+                        
+                        <FileUpload
+                          label="Son d'envoi personnalisé"
+                          accept=".mp3,.wav,.ogg"
+                          onFileSelect={handleMessageSoundUpload}
+                          currentFile={messageSoundBuffer ? 'Son personnalisé chargé' : undefined}
+                          icon={<Volume2 size={16} />}
+                        />
+                      </>
+                    )}
+                  </SettingGroup>
+
+                  {/* Pack de sons MechVibes */}
+                  <SettingGroup title="Pack de sons clavier">
+                    <SoundPackUpload />
                   </SettingGroup>
 
                   {/* Timing */}
