@@ -31,7 +31,7 @@ const Bubble: FC<BubbleProps> = ({
 						style={{ backgroundColor: settings.bubbleColor }}
 					/>
 					<span 
-						className="break-all" 
+						className="break-words" 
 						style={{ 
 							fontSize: `${settings.fontSize}px`,
 							color: settings.textColor

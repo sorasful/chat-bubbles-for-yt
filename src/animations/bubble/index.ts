@@ -5,11 +5,13 @@ import { useSettingsStore } from '../../store/use-settings-store'
 const slideRightAnimation: AnimationProps = {
   initial: {
     opacity: 0,
-    x: -20
+    x: -20,
+    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`
   },
   animate: {
     opacity: 1,
     x: 0,
+    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
     transition: { 
       duration: useSettingsStore.getState().settings.animationDuration 
     }
@@ -18,10 +20,12 @@ const slideRightAnimation: AnimationProps = {
 
 const slideUpAnimation: AnimationProps = {
   initial: {
-    opacity: 0
+    opacity: 0,
+    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`
   },
   animate: {
     opacity: 1,
+    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
     transition: {
       duration: 0.2,
       ease: "easeOut"
@@ -29,6 +33,7 @@ const slideUpAnimation: AnimationProps = {
   },
   exit: { 
     opacity: 0, 
+    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
     transition: { 
       duration: 0.2 
     } 

@@ -50,7 +50,9 @@ const DraftBubble = ({
 						className="overflow-y-hidden break-words outline-none"
 						style={{ 
 							fontSize: `${settings.fontSize}px`,
-							color: settings.textColor
+							color: settings.textColor,
+							wordWrap: 'break-word',
+							overflowWrap: 'break-word'
 						}}
 						ref={refEditable}
 						onInput={handleDraftBubbleChange}
