@@ -18,18 +18,21 @@ const slideRightAnimation: AnimationProps = {
 
 const slideUpAnimation: AnimationProps = {
   initial: {
-    opacity: 0,
-    y: 10
+    opacity: 0
   },
   animate: {
     opacity: 1,
-    y: 0,
     transition: {
-      duration: useSettingsStore.getState().settings.animationDuration,
+      duration: 0.2,
       ease: "easeOut"
     }
   },
-  exit: { opacity: 0, transition: { duration: 0.5 } }
+  exit: { 
+    opacity: 0, 
+    transition: { 
+      duration: 0.2 
+    } 
+  }
 }
 
 export { slideRightAnimation, slideUpAnimation }

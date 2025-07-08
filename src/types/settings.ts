@@ -20,6 +20,6 @@ export const defaultSettings: SettingsType = {
   fontSize: 16,
   maxBubbleWidth: 384,
   chatGap: 8,
-  timerShort: 500,
-  timerLong: 3000
+  timerShort: 300,
+  timerLong: 1500
 }
