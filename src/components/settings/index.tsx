@@ -141,6 +141,12 @@ const Settings = () => {
                     />
                     
                     {audioSettings.keyboardSoundEnabled && (
+                      <>
+                        {audioSettings.currentSoundPack && (
+                          <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                            Pack actuel: {soundPacks[audioSettings.currentSoundPack]?.config.name || 'Inconnu'}
+                          </div>
+                        )}
                       <NumberInput
                         label="Volume clavier"
                         value={audioSettings.keyboardVolume}
@@ -168,6 +174,7 @@ const Settings = () => {
                           max={1}
                           step={0.1}
                         />
+                      </>
                         
                         <FileUpload
                           label="Son d'envoi personnalisé"

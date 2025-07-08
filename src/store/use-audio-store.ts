@@ -37,8 +37,11 @@ const useAudioStore = create<AudioStore>()(
         const { audioContext } = get()
         if (!audioContext) {
           const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+          console.log('Audio context initialized:', ctx.state)
           set({ audioContext: ctx })
+          return ctx
         }
+        return audioContext
       },
 
       loadSoundPack: async (config: MechVibesConfig, audioFile: File) => {
@@ -81,23 +84,37 @@ const useAudioStore = create<AudioStore>()(
       playKeySound: (keyCode: string) => {
         const { audioSettings, soundPacks, audioContext } = get()
         
-        if (!audioSettings.keyboardSoundEnabled || !audioSettings.currentSoundPack || !audioContext) {
+        if (!audioSettings.keyboardSoundEnabled || !audioSettings.currentSoundPack || !audioContext || audioContext.state === 'suspended') {
           return
         }
 
         const soundPack = soundPacks[audioSettings.currentSoundPack]
-        if (!soundPack) return
+        if (!soundPack) {
+          console.log('No sound pack found for:', audioSettings.currentSoundPack)
+          return
+        }
 
         const { config, audioBuffer } = soundPack
         const keyDefine = config.defines[keyCode]
         
-        if (!keyDefine) return
+        if (!keyDefine) {
+          console.log('No key define found for:', keyCode, 'Available keys:', Object.keys(config.defines).slice(0, 10))
+          return
+        }
 
         const [startTime, duration] = keyDefine
+        // Les valeurs dans MechVibes sont en millisecondes, on les convertit en secondes
         const startTimeSeconds = startTime / 1000
         const durationSeconds = duration / 1000
+        
+        console.log(`Playing key ${keyCode}: start=${startTimeSeconds}s, duration=${durationSeconds}s`)
 
         try {
+          // Resume audio context if suspended
+          if (audioContext.state === 'suspended') {
+            audioContext.resume()
+          }
+          
           const source = audioContext.createBufferSource()
           const gainNode = audioContext.createGain()
           
@@ -107,7 +124,14 @@ const useAudioStore = create<AudioStore>()(
           source.connect(gainNode)
           gainNode.connect(audioContext.destination)
           
-          source.start(0, startTimeSeconds, durationSeconds)
+          // Vérifier que les valeurs sont valides
+          if (startTimeSeconds >= 0 && durationSeconds > 0 && startTimeSeconds < audioBuffer.duration) {
+            source.start(0, startTimeSeconds, Math.min(durationSeconds, audioBuffer.duration - startTimeSeconds))
+          } else {
+            console.warn('Invalid audio timing:', { startTimeSeconds, durationSeconds, bufferDuration: audioBuffer.duration })
+            // Fallback: jouer un petit segment au début
+            source.start(0, 0, 0.1)
+          }
         } catch (error) {
           console.error('Error playing key sound:', error)
         }

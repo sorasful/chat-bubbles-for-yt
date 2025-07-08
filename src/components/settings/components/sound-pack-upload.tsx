@@ -26,11 +26,18 @@ const SoundPackUpload = () => {
     try {
       const configText = await configFile.text()
       const config: MechVibesConfig = JSON.parse(configText)
+      
+      console.log('Loading sound pack:', config.name)
+      console.log('Available keys:', Object.keys(config.defines).length)
+      console.log('Sample keys:', Object.keys(config.defines).slice(0, 10))
+      
       await loadSoundPack(config, audioFile)
       
       // Reset files after successful upload
       setConfigFile(null)
       setAudioFile(null)
+      
+      alert(`Pack de sons "${config.name}" chargé avec succès !`)
     } catch (error) {
       console.error('Error uploading sound pack:', error)
       alert('Erreur lors du chargement du pack de sons. Vérifiez que les fichiers sont valides.')
