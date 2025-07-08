@@ -147,14 +147,15 @@ const Settings = () => {
                             Pack actuel: {soundPacks[audioSettings.currentSoundPack]?.config.name || 'Inconnu'}
                           </div>
                         )}
-                      <NumberInput
-                        label="Volume clavier"
-                        value={audioSettings.keyboardVolume}
-                        onChange={(value) => updateAudioSetting('keyboardVolume', value)}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                      />
+                        <NumberInput
+                          label="Volume clavier"
+                          value={audioSettings.keyboardVolume}
+                          onChange={(value) => updateAudioSetting('keyboardVolume', value)}
+                          min={0}
+                          max={1}
+                          step={0.1}
+                        />
+                      </>
                     )}
 
                     <ToggleSwitch
@@ -174,7 +175,6 @@ const Settings = () => {
                           max={1}
                           step={0.1}
                         />
-                      </>
                         
                         <FileUpload
                           label="Son d'envoi personnalisé"
