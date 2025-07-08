@@ -3,9 +3,13 @@ import { AnimationProps } from 'framer-motion'
 import { useSettingsStore } from '../../store/use-settings-store'
 
 const slideRightAnimation: AnimationProps = {
+  initial: {
+    opacity: 0,
+    x: -20
+  },
   animate: {
-    opacity: [0, 1],
-    x: [-20, 0],
+    opacity: 1,
+    x: 0,
     transition: { 
       duration: useSettingsStore.getState().settings.animationDuration 
     }
@@ -13,15 +17,16 @@ const slideRightAnimation: AnimationProps = {
 }
 
 const slideUpAnimation: AnimationProps = {
+  initial: {
+    opacity: 0,
+    y: 10
+  },
   animate: {
-    y: [0, -10],
+    opacity: 1,
+    y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 500,
-      damping: 50,
-      default: {
-        duration: useSettingsStore.getState().settings.animationDuration + 0.1
-      }
+      duration: useSettingsStore.getState().settings.animationDuration,
+      ease: "easeOut"
     }
   },
   exit: { opacity: 0, transition: { duration: 0.5 } }
