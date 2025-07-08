@@ -30,6 +30,12 @@ const useChatStore = create<ChatStore>((set, get) => ({
 	onSendBubble: (event: KeyboardEvent): void => {
 		const { code } = event
 		const isEnterCode = code === 'Enter'
+		const isShiftKey = code === 'ShiftLeft' || code === 'ShiftRight'
+
+		// Ignorer complètement les touches Shift
+		if (isShiftKey) {
+			return
+		}
 
 		if (isEnterCode) {
 			event.preventDefault()
@@ -42,21 +48,23 @@ const useChatStore = create<ChatStore>((set, get) => ({
 			if (isEnterCode && draftBubble.trim() !== '') {
 				// Play message sound using audio store
 				useAudioStore.getState().playMessageSound()
+				
+				// Envoyer le message et cacher immédiatement la bulle de draft
+				return {
+					...state,
+					chatHistory: [
+						...state.chatHistory,
+						{ id: uuid(), content: draftBubble, isVisible: true }
+					],
+					draftBubble: '',
+					showDraftBubble: false
+				}
 			}
 
+			// Pour toutes les autres touches, juste montrer la bulle de draft
 			return {
 				...state,
-				showDraftBubble: true,
-				...(isEnterCode && draftBubble.trim() !== ''
-					? {
-							chatHistory: [
-								...state.chatHistory,
-								{ id: uuid(), content: draftBubble, isVisible: true }
-							],
-							draftBubble: '',
-							showDraftBubble: false
-						}
-					: {})
+				showDraftBubble: true
 			}
 		})
 	},

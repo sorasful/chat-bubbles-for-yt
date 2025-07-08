@@ -23,6 +23,11 @@ const useKeyboardSound = () => {
         return
       }
       
+      // Ignorer les touches Shift
+      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+        return
+      }
+      
       console.log(`Key pressed: ${event.code}`)
       playKeystrokeSound(event.code, audioSettings.keyboardVolume)
     }
@@ -30,6 +35,11 @@ const useKeyboardSound = () => {
     const handleKeyUp = (event: KeyboardEvent) => {
       // Ne pas jouer de son si les sons de clavier sont désactivés
       if (!audioSettings.keyboardSoundEnabled) {
+        return
+      }
+      
+      // Ignorer les touches Shift
+      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
         return
       }
       
