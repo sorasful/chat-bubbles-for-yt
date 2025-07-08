@@ -3,6 +3,7 @@ import { create } from 'zustand'
 
 import { BubbleType } from '../types/bubble'
 import { useSettingsStore } from './use-settings-store'
+import { useSoundPack } from '../hooks/use-sound-pack'
 
 interface ChatStore {
 	chatHistory: BubbleType[]
@@ -35,10 +36,9 @@ const useChatStore = create<ChatStore>((set, get) => ({
 
 			// Play message sound when sending
 			if (isEnterCode && draftBubble.trim() !== '') {
-				// Import dynamically to avoid circular dependency
-				import('./use-audio-store').then(({ useAudioStore }) => {
-					useAudioStore.getState().playMessageSound()
-				})
+				// Get the sound pack hook instance
+				const soundPackHook = useSoundPack()
+				soundPackHook.playMessageSound()
 			}
 
 			return {

@@ -4,19 +4,15 @@ import { X, RotateCcw, Volume2 } from 'lucide-react'
 import { useAudioStore } from '../../store/use-audio-store'
 import { useSettingsStore } from '../../store/use-settings-store'
 import { ColorPicker } from './components/color-picker'
+import { MessageSoundUpload } from './components/message-sound-upload'
 import { NumberInput } from './components/number-input'
 import { SettingGroup } from './components/setting-group'
 import { SoundPackUpload } from './components/sound-pack-upload'
 import { ToggleSwitch } from './components/toggle-switch'
-import { FileUpload } from './components/file-upload'
 
 const Settings = () => {
   const { settings, isSettingsOpen, updateSetting, resetSettings, toggleSettings } = useSettingsStore()
-  const { audioSettings, updateAudioSetting, loadMessageSound, messageSoundBuffer, soundPacks } = useAudioStore()
-
-  const handleMessageSoundUpload = async (file: File) => {
-    await loadMessageSound(file)
-  }
+  const { audioSettings, updateAudioSetting } = useAudioStore()
 
   return (
     <AnimatePresence>
@@ -158,6 +154,10 @@ const Settings = () => {
                       </>
                     )}
 
+                  </SettingGroup>
+
+                  {/* Sons de message */}
+                  <SettingGroup title="Sons de message">
                     <ToggleSwitch
                       label="Son d'envoi de message"
                       checked={audioSettings.messageSoundEnabled}
@@ -176,13 +176,7 @@ const Settings = () => {
                           step={0.1}
                         />
                         
-                        <FileUpload
-                          label="Son d'envoi personnalisé"
-                          accept=".mp3,.wav,.ogg"
-                          onFileSelect={handleMessageSoundUpload}
-                          currentFile={messageSoundBuffer ? 'Son personnalisé chargé' : undefined}
-                          icon={<Volume2 size={16} />}
-                        />
+                        <MessageSoundUpload />
                       </>
                     )}
                   </SettingGroup>

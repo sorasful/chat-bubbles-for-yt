@@ -1,15 +1,13 @@
 import { useState } from 'react'
 import { Keyboard } from 'lucide-react'
 
-import { useAudioStore } from '../../../store/use-audio-store'
-import { MechVibesConfig } from '../../../types/audio'
+import { useSoundPack } from '../../../hooks/use-sound-pack'
 import { FileUpload } from './file-upload'
 
 const SoundPackUpload = () => {
-  const { soundPacks, loadSoundPack, removeSoundPack, audioSettings } = useAudioStore()
+  const { currentSoundPack, loadSoundPack, isLoading } = useSoundPack()
   const [configFile, setConfigFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
 
   const handleConfigUpload = async (file: File) => {
     setConfigFile(file)
@@ -22,33 +20,19 @@ const SoundPackUpload = () => {
   const handleUploadComplete = async () => {
     if (!configFile || !audioFile) return
 
-    setIsUploading(true)
     try {
-      const configText = await configFile.text()
-      const config: MechVibesConfig = JSON.parse(configText)
-      
-      console.log('Loading sound pack:', config.name)
-      console.log('Available keys:', Object.keys(config.defines).length)
-      console.log('Sample keys:', Object.keys(config.defines).slice(0, 10))
-      
-      await loadSoundPack(config, audioFile)
+      await loadSoundPack(configFile, audioFile)
       
       // Reset files after successful upload
       setConfigFile(null)
       setAudioFile(null)
       
-      alert(`Pack de sons "${config.name}" chargé avec succès !`)
+      alert(`Pack de sons chargé avec succès !`)
     } catch (error) {
       console.error('Error uploading sound pack:', error)
       alert('Erreur lors du chargement du pack de sons. Vérifiez que les fichiers sont valides.')
-    } finally {
-      setIsUploading(false)
     }
   }
-
-  const currentSoundPack = audioSettings.currentSoundPack 
-    ? soundPacks[audioSettings.currentSoundPack]?.config.name
-    : undefined
 
   return (
     <div className="space-y-4">
@@ -63,15 +47,12 @@ const SoundPackUpload = () => {
             <div className="flex items-center gap-2">
               <Keyboard size={16} className="text-green-600" />
               <span className="text-sm font-medium text-green-800">
-                {currentSoundPack}
+                {currentSoundPack.name}
               </span>
             </div>
-            <button
-              onClick={() => removeSoundPack(audioSettings.currentSoundPack!)}
-              className="text-xs text-green-600 hover:text-green-800"
-            >
-              Supprimer
-            </button>
+            <div className="text-xs text-green-600">
+              {Object.keys(currentSoundPack.defines).length} touches
+            </div>
           </div>
         </div>
       )}
@@ -99,10 +80,10 @@ const SoundPackUpload = () => {
       {configFile && audioFile && (
         <button
           onClick={handleUploadComplete}
-          disabled={isUploading}
+          disabled={isLoading}
           className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
         >
-          {isUploading ? 'Chargement...' : 'Charger le pack de sons'}
+          {isLoading ? 'Chargement...' : 'Charger le pack de sons'}
         </button>
       )}
     </div>
