@@ -2,6 +2,7 @@ import { motion, HTMLMotionProps, AnimatePresence } from 'framer-motion'
 import { FormEvent, useCallback, useEffect, useRef } from 'react'
 
 import { slideRightAnimation } from '../../../animations/bubble'
+import { useSettingsStore } from '../../../store/use-settings-store'
 
 type DraftBubbleProps = HTMLMotionProps<'div'> & {
 	isVisible?: boolean
@@ -13,6 +14,8 @@ const DraftBubble = ({
 	onValueChange,
 	...props
 }: DraftBubbleProps) => {
+	const { settings } = useSettingsStore()
+
 	const refEditable = useRef<HTMLDivElement>(null)
 
 	const handleDraftBubbleChange = (event: FormEvent<HTMLDivElement>) => {
@@ -33,13 +36,22 @@ const DraftBubble = ({
 		<AnimatePresence>
 			{isVisible && (
 				<motion.div
-					className="w-fit rounded-3xl bg-white py-2 pl-3 pr-4 "
+					className="w-fit py-2 pl-3 pr-4"
+					style={{
+						backgroundColor: settings.bubbleColor,
+						borderRadius: `${settings.bubbleRadius}px`,
+						maxWidth: `${settings.maxBubbleWidth}px`
+					}}
 					{...slideRightAnimation}
 					{...props}
 				>
 					<div
 						contentEditable
-						className="max-w-md overflow-y-hidden break-words text-base outline-none"
+						className="overflow-y-hidden break-words outline-none"
+						style={{ 
+							fontSize: `${settings.fontSize}px`,
+							color: settings.textColor
+						}}
 						ref={refEditable}
 						onInput={handleDraftBubbleChange}
 						onBlur={handleFocus}

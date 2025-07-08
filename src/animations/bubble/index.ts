@@ -1,10 +1,14 @@
 import { AnimationProps } from 'framer-motion'
 
+import { useSettingsStore } from '../../store/use-settings-store'
+
 const slideRightAnimation: AnimationProps = {
   animate: {
     opacity: [0, 1],
     x: [-20, 0],
-    transition: { duration: 0.3 }
+    transition: { 
+      duration: useSettingsStore.getState().settings.animationDuration 
+    }
   }
 }
 
@@ -16,7 +20,7 @@ const slideUpAnimation: AnimationProps = {
       stiffness: 500,
       damping: 50,
       default: {
-        duration: 0.4
+        duration: useSettingsStore.getState().settings.animationDuration + 0.1
       }
     }
   },

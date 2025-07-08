@@ -2,11 +2,7 @@ import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 
 import { BubbleType } from '../types/bubble'
-
-enum TimerValues {
-	SHORT = 500, // 500 ms
-	LONG = 3000 // 3 sec
-}
+import { useSettingsStore } from './use-settings-store'
 
 interface ChatStore {
 	chatHistory: BubbleType[]
@@ -26,8 +22,9 @@ const useChatStore = create<ChatStore>((set, get) => ({
 	isBubbleVisible: true,
 	getTimerDuration: (): number => {
 		const { chatHistory } = get()
+		const { settings } = useSettingsStore.getState()
 		const chatHistoryLength = chatHistory.length
-		return chatHistoryLength >= 3 ? TimerValues.SHORT : TimerValues.LONG
+		return chatHistoryLength >= 3 ? settings.timerShort : settings.timerLong
 	},
 	onSendBubble: (event: KeyboardEvent): void => {
 		const { code } = event
