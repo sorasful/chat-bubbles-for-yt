@@ -1,8 +1,8 @@
 import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 
-import { useAudioStore } from './use-audio-store'
 import { BubbleType } from '../types/bubble'
+import { useSettingsStore } from './use-settings-store'
 
 interface ChatStore {
 	chatHistory: BubbleType[]
@@ -22,7 +22,7 @@ const useChatStore = create<ChatStore>((set, get) => ({
 	isBubbleVisible: true,
 	getTimerDuration: (): number => {
 		const { chatHistory } = get()
-		const { settings } = require('./use-settings-store').useSettingsStore.getState()
+		const { settings } = useSettingsStore.getState()
 		const chatHistoryLength = chatHistory.length
 		return chatHistoryLength >= 3 ? settings.timerShort : settings.timerLong
 	},
@@ -35,7 +35,10 @@ const useChatStore = create<ChatStore>((set, get) => ({
 
 			// Play message sound when sending
 			if (isEnterCode && draftBubble.trim() !== '') {
-				useAudioStore.getState().playMessageSound()
+				// Import dynamically to avoid circular dependency
+				import('./use-audio-store').then(({ useAudioStore }) => {
+					useAudioStore.getState().playMessageSound()
+				})
 			}
 
 			return {
