@@ -6,13 +6,21 @@ import { SettingsButton } from './components/settings-button'
 import { useChat } from './hooks/use-chat'
 import { useKeyboardSound } from './hooks/use-keyboard-sound'
 import { useSettingsStore } from './store/use-settings-store'
+import { useAudioStore } from './store/use-audio-store'
+import { useEffect } from 'react'
 
 const App = () => {
 	const { chatHistory, showDraftBubble, onDraftBubbleChange } = useChat()
 	const { settings } = useSettingsStore()
+	const { reloadAudioBuffers } = useAudioStore()
 	
 	// Initialize keyboard sound system
 	useKeyboardSound()
+	
+	// Reload audio buffers on app start
+	useEffect(() => {
+		reloadAudioBuffers()
+	}, [reloadAudioBuffers])
 
 	return (
 		<main 

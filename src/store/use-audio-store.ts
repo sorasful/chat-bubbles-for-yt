@@ -3,18 +3,26 @@ import { persist } from 'zustand/middleware'
 
 import { AudioSettings, defaultAudioSettings, MechVibesConfig } from '../types/audio'
 
+interface SoundPack {
+  config: MechVibesConfig
+  audioBuffer?: AudioBuffer
+  audioUrl?: string
+}
+
 interface AudioStore {
   audioSettings: AudioSettings
-  soundPacks: Record<string, { config: MechVibesConfig; audioBuffer: AudioBuffer }>
+  soundPacks: Record<string, SoundPack>
   messageSoundBuffer?: AudioBuffer
+  messageSoundUrl?: string
   audioContext?: AudioContext
   updateAudioSetting: <K extends keyof AudioSettings>(key: K, value: AudioSettings[K]) => void
-  initAudioContext: () => void
+  initAudioContext: () => AudioContext
   loadSoundPack: (config: MechVibesConfig, audioFile: File) => Promise<void>
   loadMessageSound: (audioFile: File) => Promise<void>
   playKeySound: (keyCode: string) => void
   playMessageSound: () => void
   removeSoundPack: (packId: string) => void
+  reloadAudioBuffers: () => Promise<void>
 }
 
 const useAudioStore = create<AudioStore>()(
@@ -23,6 +31,7 @@ const useAudioStore = create<AudioStore>()(
       audioSettings: defaultAudioSettings,
       soundPacks: {},
       messageSoundBuffer: undefined,
+      messageSoundUrl: undefined,
       audioContext: undefined,
 
       updateAudioSetting: (key, value) =>
@@ -35,7 +44,7 @@ const useAudioStore = create<AudioStore>()(
 
       initAudioContext: () => {
         const { audioContext } = get()
-        if (!audioContext) {
+        if (!audioContext || audioContext.state === 'closed') {
           const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
           console.log('Audio context initialized:', ctx.state)
           set({ audioContext: ctx })
@@ -45,52 +54,122 @@ const useAudioStore = create<AudioStore>()(
       },
 
       loadSoundPack: async (config: MechVibesConfig, audioFile: File) => {
-        const { audioContext, initAudioContext } = get()
-        
-        if (!audioContext) {
-          initAudioContext()
+        try {
+          const { initAudioContext } = get()
+          const ctx = initAudioContext()
+          
+          // Create URL for the audio file to persist it
+          const audioUrl = URL.createObjectURL(audioFile)
+          
+          // Decode audio data
+          const arrayBuffer = await audioFile.arrayBuffer()
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+
+          console.log('Sound pack loaded:', config.name)
+          console.log('Audio buffer duration:', audioBuffer.duration, 'seconds')
+          console.log('Available keys:', Object.keys(config.defines).length)
+
+          set((state) => ({
+            soundPacks: {
+              ...state.soundPacks,
+              [config.id]: { 
+                config, 
+                audioBuffer,
+                audioUrl 
+              }
+            },
+            audioSettings: {
+              ...state.audioSettings,
+              currentSoundPack: config.id
+            }
+          }))
+        } catch (error) {
+          console.error('Error loading sound pack:', error)
+          throw error
         }
-
-        const ctx = get().audioContext!
-        const arrayBuffer = await audioFile.arrayBuffer()
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
-
-        set((state) => ({
-          soundPacks: {
-            ...state.soundPacks,
-            [config.id]: { config, audioBuffer }
-          },
-          audioSettings: {
-            ...state.audioSettings,
-            currentSoundPack: config.id
-          }
-        }))
       },
 
       loadMessageSound: async (audioFile: File) => {
-        const { audioContext, initAudioContext } = get()
-        
-        if (!audioContext) {
-          initAudioContext()
+        try {
+          const { initAudioContext } = get()
+          const ctx = initAudioContext()
+          
+          const audioUrl = URL.createObjectURL(audioFile)
+          const arrayBuffer = await audioFile.arrayBuffer()
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+
+          set({ 
+            messageSoundBuffer: audioBuffer,
+            messageSoundUrl: audioUrl 
+          })
+        } catch (error) {
+          console.error('Error loading message sound:', error)
+          throw error
         }
+      },
 
-        const ctx = get().audioContext!
-        const arrayBuffer = await audioFile.arrayBuffer()
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
-
-        set({ messageSoundBuffer: audioBuffer })
+      reloadAudioBuffers: async () => {
+        const { soundPacks, messageSoundUrl, initAudioContext } = get()
+        const ctx = initAudioContext()
+        
+        // Reload sound packs
+        for (const [packId, pack] of Object.entries(soundPacks)) {
+          if (pack.audioUrl && !pack.audioBuffer) {
+            try {
+              const response = await fetch(pack.audioUrl)
+              const arrayBuffer = await response.arrayBuffer()
+              const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+              
+              set((state) => ({
+                soundPacks: {
+                  ...state.soundPacks,
+                  [packId]: {
+                    ...state.soundPacks[packId],
+                    audioBuffer
+                  }
+                }
+              }))
+            } catch (error) {
+              console.error('Error reloading sound pack:', packId, error)
+            }
+          }
+        }
+        
+        // Reload message sound
+        if (messageSoundUrl && !get().messageSoundBuffer) {
+          try {
+            const response = await fetch(messageSoundUrl)
+            const arrayBuffer = await response.arrayBuffer()
+            const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
+            
+            set({ messageSoundBuffer: audioBuffer })
+          } catch (error) {
+            console.error('Error reloading message sound:', error)
+          }
+        }
       },
 
       playKeySound: (keyCode: string) => {
-        const { audioSettings, soundPacks, audioContext } = get()
+        const { audioSettings, soundPacks, audioContext, initAudioContext } = get()
         
-        if (!audioSettings.keyboardSoundEnabled || !audioSettings.currentSoundPack || !audioContext || audioContext.state === 'suspended') {
+        if (!audioSettings.keyboardSoundEnabled || !audioSettings.currentSoundPack) {
+          return
+        }
+
+        const ctx = audioContext || initAudioContext()
+        
+        // Resume audio context if suspended
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            // Retry playing after resume
+            setTimeout(() => get().playKeySound(keyCode), 100)
+          })
           return
         }
 
         const soundPack = soundPacks[audioSettings.currentSoundPack]
-        if (!soundPack) {
-          console.log('No sound pack found for:', audioSettings.currentSoundPack)
+        if (!soundPack || !soundPack.audioBuffer) {
+          console.log('No sound pack or audio buffer found for:', audioSettings.currentSoundPack)
           return
         }
 
@@ -98,38 +177,34 @@ const useAudioStore = create<AudioStore>()(
         const keyDefine = config.defines[keyCode]
         
         if (!keyDefine) {
-          console.log('No key define found for:', keyCode, 'Available keys:', Object.keys(config.defines).slice(0, 10))
+          console.log('No key define found for:', keyCode)
           return
         }
 
-        const [startTime, duration] = keyDefine
-        // Les valeurs dans MechVibes sont en millisecondes, on les convertit en secondes
-        const startTimeSeconds = startTime / 1000
-        const durationSeconds = duration / 1000
+        const [startTimeMs, durationMs] = keyDefine
+        const startTimeSeconds = startTimeMs / 1000
+        const durationSeconds = durationMs / 1000
         
         console.log(`Playing key ${keyCode}: start=${startTimeSeconds}s, duration=${durationSeconds}s`)
 
         try {
-          // Resume audio context if suspended
-          if (audioContext.state === 'suspended') {
-            audioContext.resume()
-          }
-          
-          const source = audioContext.createBufferSource()
-          const gainNode = audioContext.createGain()
+          const source = ctx.createBufferSource()
+          const gainNode = ctx.createGain()
           
           source.buffer = audioBuffer
           gainNode.gain.value = audioSettings.keyboardVolume
           
           source.connect(gainNode)
-          gainNode.connect(audioContext.destination)
+          gainNode.connect(ctx.destination)
           
-          // Vérifier que les valeurs sont valides
-          if (startTimeSeconds >= 0 && durationSeconds > 0 && startTimeSeconds < audioBuffer.duration) {
-            source.start(0, startTimeSeconds, Math.min(durationSeconds, audioBuffer.duration - startTimeSeconds))
+          // Validate timing values
+          if (startTimeSeconds >= 0 && 
+              durationSeconds > 0 && 
+              startTimeSeconds < audioBuffer.duration) {
+            const actualDuration = Math.min(durationSeconds, audioBuffer.duration - startTimeSeconds)
+            source.start(0, startTimeSeconds, actualDuration)
           } else {
-            console.warn('Invalid audio timing:', { startTimeSeconds, durationSeconds, bufferDuration: audioBuffer.duration })
-            // Fallback: jouer un petit segment au début
+            console.warn('Invalid audio timing, using fallback')
             source.start(0, 0, 0.1)
           }
         } catch (error) {
@@ -138,21 +213,23 @@ const useAudioStore = create<AudioStore>()(
       },
 
       playMessageSound: () => {
-        const { audioSettings, messageSoundBuffer, audioContext } = get()
+        const { audioSettings, messageSoundBuffer, audioContext, initAudioContext } = get()
         
-        if (!audioSettings.messageSoundEnabled || !messageSoundBuffer || !audioContext) {
+        if (!audioSettings.messageSoundEnabled || !messageSoundBuffer) {
           return
         }
 
+        const ctx = audioContext || initAudioContext()
+
         try {
-          const source = audioContext.createBufferSource()
-          const gainNode = audioContext.createGain()
+          const source = ctx.createBufferSource()
+          const gainNode = ctx.createGain()
           
           source.buffer = messageSoundBuffer
           gainNode.gain.value = audioSettings.messageVolume
           
           source.connect(gainNode)
-          gainNode.connect(audioContext.destination)
+          gainNode.connect(ctx.destination)
           
           source.start()
         } catch (error) {
@@ -162,6 +239,11 @@ const useAudioStore = create<AudioStore>()(
 
       removeSoundPack: (packId: string) => {
         set((state) => {
+          const pack = state.soundPacks[packId]
+          if (pack?.audioUrl) {
+            URL.revokeObjectURL(pack.audioUrl)
+          }
+          
           const newSoundPacks = { ...state.soundPacks }
           delete newSoundPacks[packId]
           
@@ -180,7 +262,17 @@ const useAudioStore = create<AudioStore>()(
     {
       name: 'chat-bubbles-audio',
       partialize: (state) => ({
-        audioSettings: state.audioSettings
+        audioSettings: state.audioSettings,
+        soundPacks: Object.fromEntries(
+          Object.entries(state.soundPacks).map(([id, pack]) => [
+            id, 
+            { 
+              config: pack.config, 
+              audioUrl: pack.audioUrl 
+            }
+          ])
+        ),
+        messageSoundUrl: state.messageSoundUrl
       })
     }
   )

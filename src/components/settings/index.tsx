@@ -12,7 +12,7 @@ import { FileUpload } from './components/file-upload'
 
 const Settings = () => {
   const { settings, isSettingsOpen, updateSetting, resetSettings, toggleSettings } = useSettingsStore()
-  const { audioSettings, updateAudioSetting, loadMessageSound, messageSoundBuffer } = useAudioStore()
+  const { audioSettings, updateAudioSetting, loadMessageSound, messageSoundBuffer, soundPacks } = useAudioStore()
 
   const handleMessageSoundUpload = async (file: File) => {
     await loadMessageSound(file)
