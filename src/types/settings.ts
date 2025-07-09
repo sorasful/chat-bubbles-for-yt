@@ -24,7 +24,7 @@ export const defaultSettings: SettingsType = {
   maxBubbleWidth: 384,
   chatGap: 8,
   timerShort: 300,
-  timerLong: 1500
+  timerLong: 1500,
   fontFamily: 'system-ui',
   fontWeight: 'normal',
   fontStyle: 'normal'
