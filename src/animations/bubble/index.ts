@@ -1,43 +1,26 @@
 import { AnimationProps } from 'framer-motion'
 
-import { useSettingsStore } from '../../store/use-settings-store'
-
 const slideRightAnimation: AnimationProps = {
-  initial: {
-    opacity: 0,
-    x: -20,
-    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`
-  },
   animate: {
-    opacity: 1,
-    x: 0,
-    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
-    transition: { 
-      duration: useSettingsStore.getState().settings.animationDuration 
-    }
+    opacity: [0, 1],
+    x: [-20, 0],
+    transition: { duration: 0.3 }
   }
 }
 
 const slideUpAnimation: AnimationProps = {
-  initial: {
-    opacity: 0,
-    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`
-  },
   animate: {
-    opacity: 1,
-    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
+    y: [0, -10],
     transition: {
-      duration: 0.2,
-      ease: "easeOut"
+      type: 'spring',
+      stiffness: 500,
+      damping: 50,
+      default: {
+        duration: 0.4
+      }
     }
   },
-  exit: { 
-    opacity: 0, 
-    borderRadius: `${useSettingsStore.getState().settings.bubbleRadius}px`,
-    transition: { 
-      duration: 0.2 
-    } 
-  }
+  exit: { opacity: 0, transition: { duration: 0.5 } }
 }
 
 export { slideRightAnimation, slideUpAnimation }

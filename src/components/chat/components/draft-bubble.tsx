@@ -29,7 +29,7 @@ const DraftBubble = ({
 			currentRefEditable.focus()
 		}
 	}, [refEditable, isVisible])
-
+	
 	useEffect(handleFocus, [handleFocus])
 
 	return (

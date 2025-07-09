@@ -2,88 +2,88 @@ import { v4 as uuid } from 'uuid'
 import { create } from 'zustand'
 
 import { BubbleType } from '../types/bubble'
-import { useSettingsStore } from './use-settings-store'
-import { useAudioStore } from './use-audio-store'
+
+enum TimerValues {
+  SHORT = 500,
+  LONG = 3000
+}
+
+const IGNORED_KEYS = [
+  'ShiftLeft',
+  'ShiftRight',
+  'ControlLeft',
+  'ControlRight',
+  'AltLeft',
+  'AltRight',
+  'MetaLeft',
+  'MetaRight'
+]
 
 interface ChatStore {
-	chatHistory: BubbleType[]
-	draftBubble: string
-	showDraftBubble: boolean
-	isBubbleVisible: boolean
-	getTimerDuration: () => number
-	onSendBubble: (event: KeyboardEvent) => void
-	onDraftBubbleChange: (value: string) => void
-	toggleBubbleVisibility: () => void
+  chatHistory: BubbleType[]
+  draftBubble: string
+  showDraftBubble: boolean
+  isBubbleVisible: boolean
+  getTimerDuration: () => number
+  onSendBubble: (event: KeyboardEvent) => void
+  onDraftBubbleChange: (value: string) => void
+  toggleBubbleVisibility: () => void
 }
 
 const useChatStore = create<ChatStore>((set, get) => ({
-	chatHistory: [] as BubbleType[],
-	draftBubble: '',
-	showDraftBubble: false,
-	isBubbleVisible: true,
-	getTimerDuration: (): number => {
-		const { chatHistory } = get()
-		const { settings } = useSettingsStore.getState()
-		const chatHistoryLength = chatHistory.length
-		return chatHistoryLength >= 3 ? settings.timerShort : settings.timerLong
-	},
-	onSendBubble: (event: KeyboardEvent): void => {
-		const { code } = event
-		const isEnterCode = code === 'Enter'
-		const isShiftKey = code === 'ShiftLeft' || code === 'ShiftRight'
+  chatHistory: [],
+  draftBubble: '',
+  showDraftBubble: false,
+  isBubbleVisible: true,
 
-		// Ignorer complètement les touches Shift
-		if (isShiftKey) {
-			return
-		}
+  getTimerDuration: (): number => {
+    const { chatHistory } = get()
+    return chatHistory.length >= 3 ? TimerValues.SHORT : TimerValues.LONG
+  },
 
-		if (isEnterCode) {
-			event.preventDefault()
-		}
+  onSendBubble: (event: KeyboardEvent): void => {
+    const { code } = event
+    if (IGNORED_KEYS.includes(code)) return
 
-		set((state) => {
-			const { draftBubble } = state
+    const isEnterCode = code === 'Enter'
 
-			// Play message sound when sending
-			if (isEnterCode && draftBubble.trim() !== '') {
-				// Play message sound using audio store
-				useAudioStore.getState().playMessageSound()
-				
-				// Envoyer le message et cacher immédiatement la bulle de draft
-				return {
-					...state,
-					chatHistory: [
-						...state.chatHistory,
-						{ id: uuid(), content: draftBubble, isVisible: true }
-					],
-					draftBubble: '',
-					showDraftBubble: false
-				}
-			}
+    set((state) => {
+      const { draftBubble } = state
 
-			// Pour toutes les autres touches, juste montrer la bulle de draft
-			return {
-				...state,
-				showDraftBubble: true
-			}
-		})
-	},
-	onDraftBubbleChange: (value: string): void => {
-		set({ draftBubble: value })
-	},
-	toggleBubbleVisibility: (): void => {
-		set((state) => {
-			const { chatHistory, isBubbleVisible } = state
+      return {
+        ...state,
+        showDraftBubble: true,
+        ...(isEnterCode && draftBubble.trim() !== ''
+          ? {
+              chatHistory: [
+                ...state.chatHistory,
+                { id: uuid(), content: draftBubble, isVisible: true }
+              ],
+              draftBubble: '',
+              showDraftBubble: false
+            }
+          : {})
+      }
+    })
+  },
 
-			return {
-				...state,
-				chatHistory: isBubbleVisible
-					? chatHistory.slice(1)
-					: [{ ...chatHistory[0], isVisible: false }, ...chatHistory.slice(1)],
-				isBubbleVisible: !isBubbleVisible
-			}
-		})
-	}
+  onDraftBubbleChange: (value: string): void => {
+    set({ draftBubble: value })
+  },
+
+  toggleBubbleVisibility: (): void => {
+    set((state) => {
+      const { chatHistory, isBubbleVisible } = state
+
+      return {
+        ...state,
+        chatHistory: isBubbleVisible
+          ? chatHistory.slice(1)
+          : [{ ...chatHistory[0], isVisible: false }, ...chatHistory.slice(1)],
+        isBubbleVisible: !isBubbleVisible
+      }
+    })
+  }
 }))
 
 export { useChatStore }
