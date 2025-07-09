@@ -51,6 +51,9 @@ const DraftBubble = ({
 						style={{ 
 							fontSize: `${settings.fontSize}px`,
 							color: settings.textColor,
+							fontFamily: settings.fontFamily,
+							fontWeight: settings.fontWeight,
+							fontStyle: settings.fontStyle,
 							wordWrap: 'break-word',
 							overflowWrap: 'break-word'
 						}}

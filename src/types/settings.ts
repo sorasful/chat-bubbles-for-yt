@@ -9,6 +9,9 @@ export interface SettingsType {
   chatGap: number
   timerShort: number
   timerLong: number
+  fontFamily: string
+  fontWeight: 'normal' | 'bold'
+  fontStyle: 'normal' | 'italic'
 }
 
 export const defaultSettings: SettingsType = {
@@ -22,4 +25,7 @@ export const defaultSettings: SettingsType = {
   chatGap: 8,
   timerShort: 300,
   timerLong: 1500
+  fontFamily: 'system-ui',
+  fontWeight: 'normal',
+  fontStyle: 'normal'
 }

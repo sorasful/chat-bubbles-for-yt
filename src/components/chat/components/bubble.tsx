@@ -34,7 +34,10 @@ const Bubble: FC<BubbleProps> = ({
 						className="break-words" 
 						style={{ 
 							fontSize: `${settings.fontSize}px`,
-							color: settings.textColor
+							color: settings.textColor,
+							fontFamily: settings.fontFamily,
+							fontWeight: settings.fontWeight,
+							fontStyle: settings.fontStyle
 						}}
 					>
 						{content}

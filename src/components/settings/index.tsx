@@ -6,6 +6,7 @@ import { useSettingsStore } from '../../store/use-settings-store'
 import { ColorPicker } from './components/color-picker'
 import { MessageSoundUpload } from './components/message-sound-upload'
 import { NumberInput } from './components/number-input'
+import { SelectInput } from './components/select-input'
 import { SettingGroup } from './components/setting-group'
 import { SoundPackUpload } from './components/sound-pack-upload'
 import { ToggleSwitch } from './components/toggle-switch'
@@ -14,6 +15,30 @@ const Settings = () => {
   const { settings, isSettingsOpen, updateSetting, resetSettings, toggleSettings } = useSettingsStore()
   const { audioSettings, updateAudioSetting } = useAudioStore()
 
+  const fontFamilyOptions = [
+    { value: 'system-ui', label: 'Système' },
+    { value: 'Arial', label: 'Arial' },
+    { value: 'Helvetica', label: 'Helvetica' },
+    { value: 'Times New Roman', label: 'Times New Roman' },
+    { value: 'Georgia', label: 'Georgia' },
+    { value: 'Verdana', label: 'Verdana' },
+    { value: 'Courier New', label: 'Courier New' },
+    { value: 'Monaco', label: 'Monaco' },
+    { value: 'Comic Sans MS', label: 'Comic Sans MS' },
+    { value: 'Impact', label: 'Impact' },
+    { value: 'Trebuchet MS', label: 'Trebuchet MS' },
+    { value: 'Tahoma', label: 'Tahoma' }
+  ]
+
+  const fontWeightOptions = [
+    { value: 'normal', label: 'Normal' },
+    { value: 'bold', label: 'Gras' }
+  ]
+
+  const fontStyleOptions = [
+    { value: 'normal', label: 'Normal' },
+    { value: 'italic', label: 'Italique' }
+  ]
   return (
     <AnimatePresence>
       {isSettingsOpen && (
@@ -80,6 +105,12 @@ const Settings = () => {
 
                   {/* Apparence */}
                   <SettingGroup title="Apparence">
+                    <SelectInput
+                      label="Police"
+                      value={settings.fontFamily}
+                      onChange={(value) => updateSetting('fontFamily', value)}
+                      options={fontFamilyOptions}
+                    />
                     <NumberInput
                       label="Rayon des bulles"
                       value={settings.bubbleRadius}
@@ -95,6 +126,18 @@ const Settings = () => {
                       min={12}
                       max={24}
                       unit="px"
+                    />
+                    <SelectInput
+                      label="Épaisseur"
+                      value={settings.fontWeight}
+                      onChange={(value) => updateSetting('fontWeight', value as 'normal' | 'bold')}
+                      options={fontWeightOptions}
+                    />
+                    <SelectInput
+                      label="Style"
+                      value={settings.fontStyle}
+                      onChange={(value) => updateSetting('fontStyle', value as 'normal' | 'italic')}
+                      options={fontStyleOptions}
                     />
                     <NumberInput
                       label="Largeur max des bulles"
